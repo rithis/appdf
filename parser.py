@@ -9,6 +9,7 @@ def parse(file, validate=False):
 
     >>> appdf = parse("samples/Yandex.Shell/yandex.shell.appdf")
     >>> assert isinstance(appdf, objectify.ObjectifiedElement)
+    >>> assert appdf.application.attrib["package"] == "ru.yandex.shell"
     >>> assert appdf.application.description.texts.title == "Yandex.Shell"
 
     >>> parse("samples/Yandex.Shell/yandex.shell.appdf", validate=True)
