@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from parser import parse
+import appdf_parser
 from publishers import google_play
 
 argument_parser = ArgumentParser(description="AppDF publisher")
@@ -10,5 +10,5 @@ argument_parser.add_argument("--validate", "-v", action="store_true",
                              help="Validate AppDF schema")
 args = argument_parser.parse_args()
 
-appdf = parse(args.file, args.validate)
+appdf = appdf_parser.parse(args.file, args.validate)
 google_play.publish(appdf, args.username, args.password)

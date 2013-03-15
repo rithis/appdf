@@ -11,4 +11,4 @@ samples:
 	rm master.tar.gz
 
 test:
-	python -m doctest -v parser.py
+	python -m doctest -v appdf_parser.py
