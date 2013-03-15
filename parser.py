@@ -4,12 +4,17 @@ from lxml import etree, objectify
 from io import StringIO
 
 
-def parse(file):
+def parse(file, validate=False):
     """Parse AppDF file and return structured object.
 
     >>> appdf = parse("samples/Yandex.Shell/yandex.shell.appdf")
     >>> assert isinstance(appdf, objectify.ObjectifiedElement)
     >>> assert appdf.application.description.texts.title == "Yandex.Shell"
+
+    >>> parse("samples/Yandex.Shell/yandex.shell.appdf", validate=True)
+    Traceback (most recent call last):
+        ...
+    lxml.etree.DocumentInvalid: Element 'application': The attribute 'platform' is required but missing., line 7
 
     >>> parse("404 Not Found")
     Traceback (most recent call last):
@@ -34,6 +39,7 @@ def parse(file):
         xml = archive.read("description.xml")
 
         # disabled, see https://github.com/onepf/AppDF/issues/71
-        # schema.assertValid(etree.fromstring(xml))
+        if validate:
+            schema.assertValid(etree.fromstring(xml))
 
         return objectify.fromstring(xml)
