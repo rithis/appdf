@@ -15,17 +15,17 @@ def parse(file, validate=False):
     >>> parse("samples/Yandex.Shell/yandex.shell.appdf", validate=True)
     Traceback (most recent call last):
         ...
-    lxml.etree.DocumentInvalid: Element 'application': The attribute 'platform' is required but missing., line 7
+    DocumentInvalid: Element 'application': The attribute 'platform' is required but missing., line 7
 
     >>> parse("404 Not Found")
     Traceback (most recent call last):
         ...
-    FileNotFoundError: [Errno 2] No such file or directory: '404 Not Found'
+    IOError: [Errno 2] No such file or directory: '404 Not Found'
 
     >>> parse("Makefile")
     Traceback (most recent call last):
         ...
-    zipfile.BadZipFile: File is not a zip file
+    BadZipfile: File is not a zip file
     """
     with ZipFile(file, "r") as archive:
         if archive.testzip():
