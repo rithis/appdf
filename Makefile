@@ -1,7 +1,12 @@
-all: requirements samples test
+all: requirements dryscrape samples test
 
 requirements:
 	pip install -r requirements.txt
+
+dryscrape:
+	git clone git://github.com/niklasb/dryscrape.git
+	pip install -r dryscrape/requirements.txt
+	cd dryscrape && python setup.py install
 
 samples:
 	wget https://github.com/onepf/AppDF/archive/master.tar.gz
