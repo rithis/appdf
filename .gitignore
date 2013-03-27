@@ -1,4 +1,4 @@
 *.pyc
-/debug
-/dryscrape
-/samples
+/debug/
+/dryscrape/
+/samples/

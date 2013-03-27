@@ -1,4 +1,4 @@
-all: requirements dryscrape samples test
+all: requirements dryscrape samples
 
 requirements:
 	pip install -r requirements.txt
@@ -15,5 +15,5 @@ samples:
 	rm -r AppDF-master
 	rm master.tar.gz
 
-test:
-	python -m doctest -v appdf_parser.py
+pep8:
+	pep8 bin lib
