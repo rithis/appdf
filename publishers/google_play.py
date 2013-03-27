@@ -30,6 +30,8 @@ class GooglePlay:
     assert self.is_app_opened(appdf)
     assert self.is_store_listing_opened()
 
+    self.fill_store_listing(appdf)
+
   def open_console(self):
     self.session.visit("https://play.google.com/apps/publish/v2/")
     self._screenshot("open_console-opened.png")
@@ -77,12 +79,7 @@ class GooglePlay:
 
     self._screenshot("create_app-popup.png")
 
-    language = appdf.application["description-localization"].attrib["language"]
-    css = "div.popupContent select option[value^={}]".format(language)
-    locale = self.session.at_css(css).get_attr("value")
     title = appdf.application.description.texts.title
-
-    self.session.at_css("div.popupContent select").set(locale)
     self.session.at_css("div.popupContent input").set(title)
 
     self._screenshot("create_app-filled.png")
@@ -102,6 +99,60 @@ class GooglePlay:
   def is_store_listing_opened(self):
     xpath = "//h3[contains(text(), 'Store Listing')]"
     return bool(self.session.at_xpath(xpath))
+
+  def fill_store_listing(self, appdf):
+    inputs = self.session.css("fieldset input")
+    assert len(inputs) == 7
+
+    textareas = self.session.css("fieldset textarea")
+    assert len(textareas) == 3
+
+    selects = self.session.css("fieldset select")
+    assert len(selects) == 3
+
+    def fill(elements, values):
+      for i, value in enumerate(values):
+        if value:
+          element = elements[i]
+          element.set(value)
+
+    fill(inputs, [
+      appdf.application.description.texts.title,
+      "http://www.youtube.com/watch?v={}".format(appdf.application.description.videos["youtube-video"]),
+      appdf.application["customer-support"].website,
+      appdf.application["customer-support"].email,
+      appdf.application["customer-support"].phone,
+      appdf.application.description.texts["privacy-policy"]
+    ])
+
+    fill(textareas, [
+      appdf.application.description.texts["full-description"].text.encode("utf-8"),
+      appdf.application.description.texts["short-description"],
+      appdf.application.description.texts["recent-changes"]
+    ])
+
+    rating = {
+      3: "SUITABLE_FOR_ALL",
+      6: "PRE_TEEN",
+      10: "TEEN",
+      13: "TEEN",
+      17: "MATURE",
+      18: "MATURE"
+    }[appdf.application["content-description"]["content-rating"]]
+
+    fill(selects, [
+      appdf.application.categorization.type.text.upper(),
+      appdf.application.categorization.category.text.upper(), # TODO: doesn't work
+      rating
+    ])
+
+    xpath = "//*[normalize-space(text()) = 'Save']"
+    self.session.at_xpath(xpath).click()
+
+    xpath = "//*[normalize-space(text()) = 'Saved']"
+    self.session.at_xpath(xpath, timeout=5)
+
+    self._screenshot("fill_store_listing-saved.png")
 
   def _screenshot(self, name):
     if self.debug_dir:
