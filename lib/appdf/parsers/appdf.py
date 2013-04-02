@@ -32,16 +32,16 @@ class AppDF(object):
         self.archive = None
 
     def parse(self):
-        with zipfile.ZipFile(self.file_path, "r") as archive:
-            if archive.testzip():
-                raise RuntimeError("AppDF file `{}' is broken".format(file))
+        self.archive = zipfile.ZipFile(self.file_path, "r")
 
-            if "description.xml" not in archive.namelist():
-                raise RuntimeError("Invalid AppDF file `{}'".format(file))
+        if self.archive.testzip():
+            raise RuntimeError("AppDF file `{}' is broken".format(file))
 
-            self.archive = archive
-            self.xml = archive.read("description.xml")
-            self.obj = lxml.objectify.fromstring(self.xml)
+        if "description.xml" not in self.archive.namelist():
+            raise RuntimeError("Invalid AppDF file `{}'".format(file))
+
+        self.xml = self.archive.read("description.xml")
+        self.obj = lxml.objectify.fromstring(self.xml)
 
     def validate(self):
         current_dir = os.path.dirname(os.path.realpath(__file__))
