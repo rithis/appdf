@@ -113,3 +113,14 @@ class AppDF(object):
     @normalize
     def rating(self):
         return self.obj.application["content-description"]["content-rating"]
+
+    @silent
+    def screenshots(self):
+        screenshots = []
+
+        for i in self.obj.application.description.images.screenshots.screenshot:
+            info = self.archive.getinfo(i.text.encode("utf-8"))
+            screenshots.append((info.filename, info.file_size,
+                                self.archive.read(info)))
+
+        return screenshots

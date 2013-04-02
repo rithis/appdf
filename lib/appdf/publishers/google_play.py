@@ -1,5 +1,8 @@
 import os
+import re
 import time
+import json
+import httplib
 import urlparse
 import dryscrape
 
@@ -135,6 +138,81 @@ class GooglePlay(object):
             self.app.category(),
             self.app.rating()
         ])
+
+        file_id = 0
+
+        for filename, file_size, file_content in self.app.screenshots():
+            upload_metadata = json.dumps({
+                "1": 3,
+                "3": 1,
+                "6": "tmp.09121899434464261693.1364400600658",
+                "7": "09121899434464261693",
+                "9": "en-US",
+                "13":"AMtNNDHURPNKK_3jT3c4rJBnCBQRYiGkTA:1364885170898"
+            })
+
+            body = json.dumps({
+                "protocolVersion": "0.8",
+                "createSessionRequest": {
+                    "fields": [
+                        {
+                            "external": {
+                                "name": "file",
+                                "filename": filename,
+                                "put": {},
+                                "size": file_size
+                            }
+                        },
+                        {
+                            "inlined": {
+                                "name": "upload_metadata",
+                                "content": upload_metadata,
+                                "contentType": "text/plain"
+                            }
+                        }
+                    ]
+                }
+            })
+
+            prog = re.compile("domain=(\.?play)?.google.com;")
+            cookies = self.session.cookies()
+            cookies = filter(lambda c: prog.search(c), cookies)
+            cookies = map(lambda c: c.split(";")[0], cookies)
+            cookies = "; ".join(cookies)
+
+            headers = {
+                "accept": "*/*",
+                "accept-charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3",
+                "accept-encoding": "gzip,deflate,sdch",
+                "accept-language": "en-US,en;q=0.8",
+                "content-length": len(body),
+                "content-type": "application/x-www-form-urlencoded",
+                "cookie": cookies,
+                "referer": self.session.url(),
+                "user-agent": self.session.eval_script("navigator.userAgent")
+            }
+
+            connection = httplib.HTTPSConnection("play.google.com")
+            connection.request("POST", "/apps/publish/v2/upload", body, headers)
+            response = connection.getresponse()
+            assert response.status == 200
+            connection.close()
+
+            upload_url = response.getheader("location")
+            upload_url = upload_url.replace("https://play.google.com", "")
+            upload_url += "&file_id={}".format(str(file_id).zfill(3))
+
+            file_id += 1
+
+            headers["content-length"] = file_size
+            headers["content-type"] = "application/octet-stream"
+            headers["x-http-method-override"] = "PUT"
+
+            connection = httplib.HTTPSConnection("play.google.com")
+            connection.request("POST", upload_url, file_content, headers)
+            response = connection.getresponse()
+            assert response.status == 200
+            connection.close()
 
         self.session.at_xpath("//*[normalize-space(text()) = 'Save']").click()
         self.ensure_saved_message()
