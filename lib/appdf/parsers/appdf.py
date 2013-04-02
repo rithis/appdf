@@ -4,13 +4,24 @@ import lxml.etree
 import lxml.objectify
 
 
-def silent_normalize(f):
+def silent(f):
     def decorate(self):
         try:
-            node = f(self)
-            return node.text.encode("utf-8")
+            return f(self)
         except AttributeError:
             return None
+
+    return decorate
+
+
+def normalize(f):
+    def decorate(self):
+        result = f(self)
+
+        if isinstance(result, lxml.objectify.ObjectifiedDataElement):
+            return result.text.encode("utf-8")
+        else:
+            return result
 
     return decorate
 
@@ -39,7 +50,8 @@ class AppDF(object):
         schema = lxml.etree.XMLSchema(lxml.etree.parse(xsd_file))
         schema.assertValid(lxml.etree.fromstring(self.xml))
 
-    @silent_normalize
+    @silent
+    @normalize
     def title(self):
         return self.obj.application.description.texts.title
 
@@ -52,42 +64,52 @@ class AppDF(object):
 
         return url
 
-    @silent_normalize
+    @silent
+    @normalize
     def website(self):
         return self.obj.application["customer-support"].website
 
-    @silent_normalize
+    @silent
+    @normalize
     def email(self):
         return self.obj.application["customer-support"].email
 
-    @silent_normalize
+    @silent
+    @normalize
     def phone(self):
         return self.obj.application["customer-support"].phone
 
-    @silent_normalize
+    @silent
+    @normalize
     def privacy_policy(self):
         return self.obj.application.description.texts["privacy-policy"]
 
-    @silent_normalize
+    @silent
+    @normalize
     def full_description(self):
         return self.obj.application.description.texts["full-description"]
 
-    @silent_normalize
+    @silent
+    @normalize
     def short_description(self):
         return self.obj.application.description.texts["short-description"]
 
-    @silent_normalize
+    @silent
+    @normalize
     def recent_changes(self):
         return self.obj.application.description.texts["recent-changes"]
 
-    @silent_normalize
+    @silent
+    @normalize
     def type(self):
         return self.obj.application.categorization.type
 
-    @silent_normalize
+    @silent
+    @normalize
     def category(self):
         return self.obj.application.categorization.category
 
-    @silent_normalize
+    @silent
+    @normalize
     def rating(self):
         return self.obj.application["content-description"]["content-rating"]
